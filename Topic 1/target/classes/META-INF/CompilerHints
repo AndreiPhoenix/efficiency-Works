@@ -1,0 +1,12 @@
+dontinline,*.*_all_jmhStub
+dontinline,*.*_avgt_jmhStub
+dontinline,*.*_sample_jmhStub
+dontinline,*.*_ss_jmhStub
+dontinline,*.*_thrpt_jmhStub
+inline,com/example/performancedemo/benchmark/MapBenchmark.concurrentCompute
+inline,com/example/performancedemo/benchmark/MapBenchmark.concurrentGet
+inline,com/example/performancedemo/benchmark/MapBenchmark.concurrentPut
+inline,com/example/performancedemo/benchmark/MapBenchmark.setup
+inline,com/example/performancedemo/benchmark/MapBenchmark.synchronizedCompute
+inline,com/example/performancedemo/benchmark/MapBenchmark.synchronizedGet
+inline,com/example/performancedemo/benchmark/MapBenchmark.synchronizedPut
