@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacancy Parser - REST vs WebSocket Comparison</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .comparison-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .method-card {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 2px solid #e9ecef;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+
+        .method-card.rest {
+            border-top: 5px solid #4CAF50;
+        }
+
+        .method-card.websocket {
+            border-top: 5px solid #2196F3;
+        }
+
+        .method-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-title i {
+            font-size: 1.2em;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-area {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.processing {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .vacancy-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .vacancy-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .vacancy-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .comparison-results {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .metrics-table th,
+        .metrics-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .metrics-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .metrics-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .metrics-table .better {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .connection-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .connected {
+            background-color: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+
+        .disconnected {
+            background-color: #dc3545;
+        }
+
+        .connecting {
+            background-color: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                flex-direction: column;
+            }
+
+            .method-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Vacancy Parser Comparison</h1>
+        <div class="subtitle">REST with Polling vs WebSocket</div>
+    </header>
+
+    <div class="comparison-container">
+        <!-- REST with Polling Method -->
+        <div class="method-card rest">
+            <div class="method-title">
+                <span>📡 REST API with Polling</span>
+            </div>
+
+            <div class="controls">
+                <div class="input-group">
+                    <label for="rest-query">Search Query:</label>
+                    <input type="text" id="rest-query" placeholder="Enter technology (e.g., Java, Python)" value="Java">
+                </div>
+
+                <div class="input-group">
+                    <label for="rest-delay">Processing Delay (seconds):</label>
+                    <select id="rest-delay">
+                        <option value="1">1 second (fast)</option>
+                        <option value="3">3 seconds</option>
+                        <option value="5" selected>5 seconds (normal)</option>
+                        <option value="10">10 seconds (slow)</option>
+                    </select>
+                </div>
+
+                <button id="rest-start" onclick="startRestParsing()">Start REST Parsing</button>
+                <button id="rest-stop" onclick="stopRestPolling()" style="margin-top: 10px; background: #dc3545;" disabled>Stop Polling</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span>HTTP Requests:</span>
+                    <span id="rest-requests">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Data Transferred:</span>
+                    <span id="rest-data">0 KB</span>
+                </div>
+                <div class="stat-item">
+                    <span>Polling Interval:</span>
+                    <span>500 ms</span>
+                </div>
+                <div class="stat-item">
+                    <span>Response Time:</span>
+                    <span id="rest-time">0 ms</span>
+                </div>
+            </div>
+
+            <div class="result-area" id="rest-result">
+                <div class="status pending" id="rest-status">Ready to start</div>
+                <div id="rest-content"></div>
+            </div>
+        </div>
+
+        <!-- WebSocket Method -->
+        <div class="method-card websocket">
+            <div class="method-title">
+                <span>⚡ WebSocket</span>
+            </div>
+
+            <div class="controls">
+                <div class="input-group">
+                    <label for="ws-query">Search Query:</label>
+                    <input type="text" id="ws-query" placeholder="Enter technology (e.g., Java, Python)" value="Java">
+                </div>
+
+                <div class="input-group">
+                    <label for="ws-delay">Processing Delay (seconds):</label>
+                    <select id="ws-delay">
+                        <option value="1">1 second (fast)</option>
+                        <option value="3">3 seconds</option>
+                        <option value="5" selected>5 seconds (normal)</option>
+                        <option value="10">10 seconds (slow)</option>
+                    </select>
+                </div>
+
+                <button id="ws-connect" onclick="connectWebSocket()">Connect WebSocket</button>
+                <button id="ws-start" onclick="startWebSocketParsing()" disabled>Start WebSocket Parsing</button>
+                <button id="ws-disconnect" onclick="disconnectWebSocket()" style="margin-top: 10px; background: #6c757d;" disabled>Disconnect</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span>Connection Status:</span>
+                    <span id="ws-status">
+                            <span class="connection-status disconnected"></span>
+                            Disconnected
+                        </span>
+                </div>
+                <div class="stat-item">
+                    <span>Messages Received:</span>
+                    <span id="ws-messages">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Data Transferred:</span>
+                    <span id="ws-data">0 KB</span>
+                </div>
+                <div class="stat-item">
+                    <span>Response Time:</span>
+                    <span id="ws-time">0 ms</span>
+                </div>
+            </div>
+
+            <div class="result-area" id="ws-result">
+                <div class="status pending" id="ws-result-status">Connect to start</div>
+                <div id="ws-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-results">
+        <h2 style="color: #2c3e50; margin-bottom: 20px;">Comparison Results</h2>
+        <table class="metrics-table">
+            <thead>
+            <tr>
+                <th>Metric</th>
+                <th>REST with Polling</th>
+                <th>WebSocket</th>
+                <th>Winner</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>HTTP Requests</td>
+                <td id="comparison-rest-requests">0</td>
+                <td id="comparison-ws-requests">1 (connection)</td>
+                <td id="winner-requests" class="better">WebSocket</td>
+            </tr>
+            <tr>
+                <td>Data Transferred</td>
+                <td id="comparison-rest-data">0 KB</td>
+                <td id="comparison-ws-data">0 KB</td>
+                <td id="winner-data">-</td>
+            </tr>
+            <tr>
+                <td>Response Time</td>
+                <td id="comparison-rest-time">0 ms</td>
+                <td id="comparison-ws-time">0 ms</td>
+                <td id="winner-time">-</td>
+            </tr>
+            <tr>
+                <td>Real-time Updates</td>
+                <td>❌ Delayed (polling interval)</td>
+                <td>✅ Instant</td>
+                <td class="better">WebSocket</td>
+            </tr>
+            <tr>
+                <td>Server Load</td>
+                <td>High (constant requests)</td>
+                <td>Low (push notifications)</td>
+                <td class="better">WebSocket</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.0/dist/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    // REST Polling Variables
+    let restJobId = null;
+    let restPollInterval = null;
+    let restRequestCount = 0;
+    let restDataTransferred = 0; // in bytes
+    let restStartTime = 0;
+
+    // WebSocket Variables
+    let stompClient = null;
+    let wsClientId = null;
+    let wsMessageCount = 0;
+    let wsDataTransferred = 0; // in bytes
+    let wsStartTime = 0;
+    let wsConnectionStatus = 'disconnected';
+
+    // Update WebSocket status indicator
+    function updateWsStatusIndicator(status) {
+        const indicator = document.querySelector('#ws-status .connection-status');
+        const text = document.querySelector('#ws-status');
+        wsConnectionStatus = status;
+
+        indicator.className = 'connection-status ' + status;
+
+        switch(status) {
+            case 'connected':
+                indicator.classList.add('connected');
+                text.innerHTML = '<span class="connection-status connected"></span> Connected';
+                break;
+            case 'disconnected':
+                indicator.classList.add('disconnected');
+                text.innerHTML = '<span class="connection-status disconnected"></span> Disconnected';
+                break;
+            case 'connecting':
+                indicator.classList.add('connecting');
+                text.innerHTML = '<span class="connection-status connecting"></span> Connecting...';
+                break;
+        }
+    }
+
+    // Update comparison table
+    function updateComparisonTable() {
+        document.getElementById('comparison-rest-requests').textContent = restRequestCount;
+        document.getElementById('comparison-ws-requests').textContent = wsMessageCount;
+
+        document.getElementById('comparison-rest-data').textContent = (restDataTransferred / 1024).toFixed(2) + ' KB';
+        document.getElementById('comparison-ws-data').textContent = (wsDataTransferred / 1024).toFixed(2) + ' KB';
+
+        document.getElementById('comparison-rest-time').textContent = document.getElementById('rest-time').textContent;
+        document.getElementById('comparison-ws-time').textContent = document.getElementById('ws-time').textContent;
+
+        // Determine winners
+        if (restRequestCount > 0 && wsMessageCount > 0) {
+            if (restRequestCount > wsMessageCount) {
+                document.getElementById('winner-requests').innerHTML = '<span class="better">WebSocket</span>';
+            } else {
+                document.getElementById('winner-requests').innerHTML = '<span class="better">REST</span>';
+            }
+
+            const restData = parseFloat(document.getElementById('rest-data').textContent);
+            const wsData = parseFloat(document.getElementById('ws-data').textContent);
+            if (restData > wsData) {
+                document.getElementById('winner-data').innerHTML = '<span class="better">WebSocket</span>';
+            } else if (wsData > restData) {
+                document.getElementById('winner-data').innerHTML = '<span class="better">REST</span>';
+            } else {
+                document.getElementById('winner-data').textContent = 'Equal';
+            }
+
+            const restTime = parseInt(document.getElementById('rest-time').textContent) || 0;
+            const wsTime = parseInt(document.getElementById('ws-time').textContent) || 0;
+            if (restTime > wsTime && wsTime > 0) {
+                document.getElementById('winner-time').innerHTML = '<span class="better">WebSocket</span>';
+            } else if (wsTime > restTime && restTime > 0) {
+                document.getElementById('winner-time').innerHTML = '<span class="better">REST</span>';
+            } else if (restTime > 0 && wsTime > 0) {
+                document.getElementById('winner-time').textContent = 'Equal';
+            }
+        }
+    }
+
+    // REST with Polling Functions
+    function startRestParsing() {
+        const query = document.getElementById('rest-query').value;
+        const delay = parseInt(document.getElementById('rest-delay').value);
+
+        // Reset stats
+        restRequestCount = 0;
+        restDataTransferred = 0;
+        restStartTime = Date.now();
+        updateRestStats();
+
+        // Disable start button, enable stop button
+        document.getElementById('rest-start').disabled = true;
+        document.getElementById('rest-stop').disabled = false;
+
+        // Update status
+        updateRestStatus('Starting parsing...', 'pending');
+
+        // Start parsing via REST
+        fetch(`/api/parser/start?query=${encodeURIComponent(query)}&delay=${delay}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            // Estimate request size
+            restDataTransferred += 200; // Approximate request size
+            return response.json();
+        })
+        .then(data => {
+            // Estimate response size
+            restDataTransferred += JSON.stringify(data).length;
+            updateRestStats();
+
+            restJobId = data.jobId;
+            updateRestStatus('Parsing started. Polling for results...', 'processing');
+
+            // Start polling
+            restPollInterval = setInterval(pollRestStatus, 500);
+        })
+        .catch(error => {
+            updateRestStatus('Error: ' + error.message, 'error');
+            document.getElementById('rest-start').disabled = false;
+            document.getElementById('rest-stop').disabled = true;
+        });
+    }
+
+    function pollRestStatus() {
+        if (!restJobId) return;
+
+        restRequestCount++;
+        const startRequestTime = Date.now();
+
+        fetch(`/api/parser/status/${restJobId}`)
+            .then(response => {
+                // Calculate data transferred
+                const contentLength = response.headers.get('content-length');
+                if (contentLength) {
+                    restDataTransferred += parseInt(contentLength);
+                } else {
+                    restDataTransferred += 100; // approximate per request
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                // Add response size
+                restDataTransferred += JSON.stringify(data).length;
+
+                updateRestStats();
+
+                if (data.status === 'COMPLETED') {
+                    clearInterval(restPollInterval);
+                    updateRestStatus('Parsing completed!', 'completed');
+                    displayRestResults(data.result || data.parsedResult);
+                    document.getElementById('rest-start').disabled = false;
+                    document.getElementById('rest-stop').disabled = true;
+
+                    // Calculate total time
+                    const totalTime = Date.now() - restStartTime;
+                    document.getElementById('rest-time').textContent = totalTime + ' ms';
+                    updateComparisonTable();
+                } else if (data.status === 'PROCESSING') {
+                    updateRestStatus('Parsing in progress...', 'processing');
+                } else if (data.status === 'ERROR') {
+                    clearInterval(restPollInterval);
+                    updateRestStatus('Error: ' + data.result, 'error');
+                    document.getElementById('rest-start').disabled = false;
+                    document.getElementById('rest-stop').disabled = true;
+                } else if (data.status === 'PENDING') {
+                    updateRestStatus('Waiting to start...', 'pending');
+                }
+            })
+            .catch(error => {
+                console.error('Polling error:', error);
+                restDataTransferred += 50; // error response estimate
+                updateRestStats();
+            });
+    }
+
+    function stopRestPolling() {
+        if (restPollInterval) {
+            clearInterval(restPollInterval);
+            restPollInterval = null;
+            updateRestStatus('Polling stopped', 'pending');
+            document.getElementById('rest-start').disabled = false;
+            document.getElementById('rest-stop').disabled = true;
+        }
+    }
+
+    function updateRestStatus(message, className) {
+        const statusElement = document.getElementById('rest-status');
+        statusElement.textContent = message;
+        statusElement.className = `status ${className}`;
+    }
+
+    function updateRestStats() {
+        document.getElementById('rest-requests').textContent = restRequestCount;
+        document.getElementById('rest-data').textContent = (restDataTransferred / 1024).toFixed(2) + ' KB';
+        updateComparisonTable();
+    }
+
+    function displayRestResults(result) {
+        const contentElement = document.getElementById('rest-content');
+
+        try {
+            let vacancies;
+            if (typeof result === 'string') {
+                vacancies = JSON.parse(result);
+            } else {
+                vacancies = result;
+            }
+
+            if (Array.isArray(vacancies)) {
+                contentElement.innerHTML = vacancies.map(vacancy => `
+                    <div class="vacancy-item">
+                        <div class="vacancy-title">${vacancy.title || 'No title'}</div>
+                        <div class="vacancy-details">
+                            <span>Company: ${vacancy.company || 'Unknown'}</span>
+                            <span>Salary: ${vacancy.salary || 'Not specified'}</span>
+                            <span>Source: ${vacancy.source || 'Unknown'}</span>
+                            ${vacancy.experience ? `<span>Experience: ${vacancy.experience}</span>` : ''}
+                            ${vacancy.location ? `<span>Location: ${vacancy.location}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else if (vacancies && typeof vacancies === 'object') {
+                contentElement.innerHTML = `<pre>${JSON.stringify(vacancies, null, 2)}</pre>`;
+            } else {
+                contentElement.innerHTML = `<p>${result}</p>`;
+            }
+        } catch (e) {
+            contentElement.innerHTML = `<p>${result}</p>`;
+        }
+    }
+
+    // WebSocket Functions
+    function connectWebSocket() {
+        if (stompClient && stompClient.connected) {
+            alert('WebSocket is already connected!');
+            return;
+        }
+
+        wsClientId = 'client-' + Math.random().toString(36).substr(2, 9);
+        updateWsStatusIndicator('connecting');
+
+        const socket = new SockJS('http://localhost:8080/ws-parser');
+        stompClient = Stomp.over(socket);
+
+        // Disable debug logging
+        stompClient.debug = null;
+
+        stompClient.connect({}, function(frame) {
+            updateWsStatusIndicator('connected');
+            document.getElementById('ws-connect').disabled = true;
+            document.getElementById('ws-start').disabled = false;
+            document.getElementById('ws-disconnect').disabled = false;
+
+            // Subscribe to parser updates
+            stompClient.subscribe('/topic/parser/' + wsClientId, function(message) {
+                wsMessageCount++;
+                const data = JSON.parse(message.body);
+
+                // Estimate data transferred
+                wsDataTransferred += message.body.length;
+
+                updateWebSocketStats();
+
+                // Обновляем статус
+                updateWebSocketStatus(data.message, data.status.toLowerCase());
+
+                // Если есть вакансии, отображаем их
+                if (data.vacancies) {
+                    displayWebSocketResults(data);
+                }
+
+                // Если завершено, обновляем время
+                if (data.status === 'COMPLETED') {
+                    const totalTime = Date.now() - wsStartTime;
+                    document.getElementById('ws-time').textContent = totalTime + ' ms';
+                    updateComparisonTable();
+
+                    // Re-enable start button
+                    document.getElementById('ws-start').disabled = false;
+                }
+
+                // Логируем в консоль для отладки
+                console.log('WebSocket message received:', data);
+            });
+
+            updateWebSocketStatus('Connected. Ready to parse!', 'pending');
+        }, function(error) {
+            updateWsStatusIndicator('disconnected');
+            document.getElementById('ws-connect').disabled = false;
+            document.getElementById('ws-start').disabled = true;
+            document.getElementById('ws-disconnect').disabled = true;
+            updateWebSocketStatus('Connection failed. Please try again.', 'error');
+            console.error('WebSocket connection error:', error);
+        });
+    }
+
+    function startWebSocketParsing() {
+        if (!stompClient || !stompClient.connected) {
+            alert('Please connect WebSocket first!');
+            return;
+        }
+
+        const query = document.getElementById('ws-query').value;
+        const delay = parseInt(document.getElementById('ws-delay').value);
+
+        // Reset stats
+        wsMessageCount = 0;
+        wsDataTransferred = 0;
+        wsStartTime = Date.now();
+        updateWebSocketStats();
+
+        // Disable start button during processing
+        document.getElementById('ws-start').disabled = true;
+        setTimeout(() => {
+            if (wsConnectionStatus === 'connected') {
+                document.getElementById('ws-start').disabled = false;
+            }
+        }, delay * 1000 + 1000);
+
+        // Send parsing request
+        stompClient.send("/app/startParsing", {}, JSON.stringify({
+            query: query,
+            delay: delay,
+            clientId: wsClientId
+        }));
+
+        updateWebSocketStatus('Starting parsing via WebSocket...', 'pending');
+    }
+
+    function disconnectWebSocket() {
+        if (stompClient) {
+            stompClient.disconnect();
+            stompClient = null;
+
+            updateWsStatusIndicator('disconnected');
+            document.getElementById('ws-connect').disabled = false;
+            document.getElementById('ws-start').disabled = true;
+            document.getElementById('ws-disconnect').disabled = true;
+
+            updateWebSocketStatus('Disconnected', 'pending');
+
+            // Reset WebSocket stats
+            wsMessageCount = 0;
+            wsDataTransferred = 0;
+            updateWebSocketStats();
+        }
+    }
+
+    function updateWebSocketStatus(message, className) {
+        const statusElement = document.getElementById('ws-result-status');
+        statusElement.textContent = message;
+        statusElement.className = `status ${className}`;
+    }
+
+    function updateWebSocketStats() {
+        document.getElementById('ws-messages').textContent = wsMessageCount;
+        document.getElementById('ws-data').textContent = (wsDataTransferred / 1024).toFixed(2) + ' KB';
+        updateComparisonTable();
+    }
+
+    function displayWebSocketResults(data) {
+        const contentElement = document.getElementById('ws-content');
+
+        if (data.vacancies && Array.isArray(data.vacancies)) {
+            contentElement.innerHTML = data.vacancies.map(vacancy => `
+                <div class="vacancy-item">
+                    <div class="vacancy-title">${vacancy.title || 'No title'}</div>
+                    <div class="vacancy-details">
+                        <span>Company: ${vacancy.company || 'Unknown'}</span>
+                        <span>Salary: ${vacancy.salary || 'Not specified'}</span>
+                        <span>Experience: ${vacancy.experience || 'Not specified'}</span>
+                        ${vacancy.source ? `<span>Source: ${vacancy.source}</span>` : ''}
+                        ${vacancy.location ? `<span>Location: ${vacancy.location}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        } else if (data.result) {
+            contentElement.innerHTML = `<p>${data.result}</p>`;
+        } else {
+            contentElement.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+    }
+
+    // Initialize comparison table
+    updateComparisonTable();
+
+    // Auto-connect WebSocket on page load (optional)
+    // setTimeout(connectWebSocket, 1000);
+
+    // Handle page unload
+    window.addEventListener('beforeunload', function() {
+        if (stompClient && stompClient.connected) {
+            stompClient.disconnect();
+        }
+        if (restPollInterval) {
+            clearInterval(restPollInterval);
+        }
+    });
+</script>
+</body>
+</html>
