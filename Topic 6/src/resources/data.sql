@@ -1,0 +1,16 @@
+INSERT INTO products (name, category, price, description, in_stock, views_count) VALUES
+('Laptop Pro X1', 'Electronics', 1299.99, 'High-performance laptop with 16GB RAM and 1TB SSD', true, 150),
+('Smartphone Galaxy S23', 'Electronics', 899.99, 'Latest smartphone with advanced camera', true, 250),
+('Wireless Headphones', 'Electronics', 199.99, 'Noise-cancelling wireless headphones', true, 180),
+('Gaming Chair', 'Furniture', 299.99, 'Ergonomic gaming chair with lumbar support', true, 90),
+('Desk Lamp', 'Home', 49.99, 'LED desk lamp with adjustable brightness', true, 60),
+('Coffee Maker', 'Kitchen', 79.99, 'Automatic coffee maker with timer', true, 120),
+('Running Shoes', 'Sports', 89.99, 'Lightweight running shoes for marathon', true, 200),
+('Yoga Mat', 'Sports', 29.99, 'Non-slip yoga mat with carrying strap', true, 80),
+('Backpack', 'Travel', 59.99, 'Water-resistant backpack with laptop compartment', true, 110),
+('Water Bottle', 'Sports', 19.99, 'Insulated stainless steel water bottle', true, 70),
+('Monitor 27"', 'Electronics', 349.99, '4K UHD monitor with HDR support', true, 95),
+('Mechanical Keyboard', 'Electronics', 129.99, 'RGB mechanical keyboard with blue switches', true, 130),
+('Mouse Wireless', 'Electronics', 49.99, 'Ergonomic wireless mouse with precision sensor', true, 85),
+('Bookshelf', 'Furniture', 199.99, '5-tier wooden bookshelf', true, 40),
+('Plant Pot', 'Home', 24.99, 'Ceramic plant pot with drainage', true, 30);

@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+
+  app-primary:
+    build: .
+    container_name: app-primary
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  app-secondary:
+    build: .
+    container_name: app-secondary
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SERVER_PORT=8080
+    depends_on:
+      - redis
+
+  # Для тестирования нагрузки
+  load-test:
+    image: williamyeh/wrk:latest
+    container_name: load-test
+    depends_on:
+      - app-primary
+    command: ["-t4", "-c100", "-d30s", "http://app-primary:8080/api/products/1"]
+    profiles:
+      - test
+
+volumes:
+  redis-data:
