@@ -1,0 +1,3 @@
+JMH S 37 com.example.benchmark.ParserBenchmark S 76 com.example.benchmark.jmh_generated.ParserBenchmark_benchmarkForLoop_jmhTest S 16 benchmarkForLoop S 11 AverageTime E A 1 1 1 E I 1 3 T 3 1 s E I 1 5 T 3 1 s E I 1 2 E E E E E E U 12 MILLISECONDS E E 
+JMH S 37 com.example.benchmark.ParserBenchmark S 83 com.example.benchmark.jmh_generated.ParserBenchmark_benchmarkParallelStream_jmhTest S 23 benchmarkParallelStream S 11 AverageTime E A 1 1 1 E I 1 3 T 3 1 s E I 1 5 T 3 1 s E I 1 2 E E E E E E U 12 MILLISECONDS E E 
+JMH S 37 com.example.benchmark.ParserBenchmark S 75 com.example.benchmark.jmh_generated.ParserBenchmark_benchmarkStream_jmhTest S 15 benchmarkStream S 11 AverageTime E A 1 1 1 E I 1 3 T 3 1 s E I 1 5 T 3 1 s E I 1 2 E E E E E E U 12 MILLISECONDS E E 

@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'me.champeau.jmh' version '0.7.2'
+}
+
+group = 'com.example'
+version = '1.0.0'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Micrometer и Prometheus
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // OpenTelemetry
+    implementation 'io.opentelemetry:opentelemetry-api:1.35.0'
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.35.0'
+    implementation 'io.opentelemetry:opentelemetry-exporter-jaeger:1.35.0'
+    implementation 'io.opentelemetry:opentelemetry-semconv:1.35.0-alpha'
+
+    // База данных
+    implementation 'org.postgresql:postgresql'
+    implementation 'com.h2database:h2'
+
+    // JMH
+    jmh 'org.openjdk.jmh:jmh-core:1.37'
+    jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
+
+    // Утилиты
+    implementation 'org.apache.commons:commons-csv:1.10.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Логирование
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // Тестирование
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:postgresql:1.19.3'
+}
+
+jmh {
+    warmupIterations = 5
+    iterations = 10
+    fork = 2
+    benchmarkMode = ['thrpt', 'avgt']
+    timeUnit = 'ms'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    manifest {
+        attributes(
+                'Implementation-Title': 'Performance Analysis',
+                'Implementation-Version': version,
+                'Main-Class': 'com.example.MainApp'
+        )
+    }
+}
