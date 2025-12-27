@@ -1,0 +1,5 @@
+product-1,Great product! Very satisfied.,5.0
+product-1,Not bad, could be better.,3.0
+product-1,Excellent quality, worth the price.,4.0
+product-2,Very disappointed with this purchase.,2.0
+product-2,Average product, nothing special.,3.0
