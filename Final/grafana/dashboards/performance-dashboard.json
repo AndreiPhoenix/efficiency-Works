@@ -1,0 +1,46 @@
+{
+  "dashboard": {
+    "title": "Performance Analysis Dashboard",
+    "panels": [
+      {
+        "title": "Parser Throughput",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(parser_success_total[5m])",
+            "legendFormat": "Success Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(parser_failures_total[5m])",
+            "legendFormat": "Failure Rate",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "Parse Duration Percentiles",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(parser_duration_seconds_bucket[5m]))",
+            "legendFormat": "p99",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(parser_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(parser_duration_seconds_bucket[5m]))",
+            "legendFormat": "p50",
+            "refId": "C"
+          }
+        ]
+      }
+    ]
+  }
+}
